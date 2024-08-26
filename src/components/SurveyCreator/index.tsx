@@ -40,17 +40,19 @@ interface SurveyCreatorProps {
 
 const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
   const [title, setTitle] = useState('');
-  const [coverImage, setCoverImage] = useState('');
+  const [coverImage, setCoverImage] = useState('https://tr.zotiontech-sa.com/Content/upload/2018298633/201805151150563181374.jpg');
   const [options, setOptions] = useState<Option[]>(initialOptions);
   const [optionName, setOptionName] = useState('');
   const [optionImage, setOptionImage] = useState('');
 
-  const { register, handleSubmit, formState: { errors } } = useForm<Survey>({
+  const { register, handleSubmit, formState: { errors }} = useForm<Survey>({
     defaultValues: {
       title: '',
       coverImage: 'https://tr.zotiontech-sa.com/Content/upload/2018298633/201805151150563181374.jpg',
-      options: initialOptions
+      options: initialOptions,
     },
+    mode: 'onSubmit',
+    reValidateMode: 'onChange',
   });
 
   const addOption = () => {
@@ -94,7 +96,7 @@ const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
             type="text"
             placeholder="Kapak Görseli URL"
             className={`border rounded-md w-full p-2 ${errors.coverImage ? 'border-red-500' : ''}`}
-            onChange={(e) => setCoverImage(e.target.value)}
+            onChange={(e) => setCoverImage(Object.keys(errors).length > 0 ? coverImage : e.target.value )}
             value={coverImage}
           />
           {errors.coverImage && <p className="text-red-500">{errors.coverImage.message}</p>}
@@ -138,9 +140,8 @@ const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
           )}
         </div>
         <button 
-          className="w-full mt-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
-          // onClick={onSubmit}
-          disabled={options.length === 0 || options.some(option => !option.name)}
+          className="w-full mt-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition disabled:pointer-events-none"
+          disabled={options.length === 0 || !title || !coverImage}
         >
             Anketi Oluştur
         </button>
