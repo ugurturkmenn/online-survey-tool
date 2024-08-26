@@ -1,5 +1,7 @@
 import React, { useState } from 'react';
 import { Option, Survey } from '../../types';
+import { useForm, useFieldArray } from 'react-hook-form';
+
 
 const initialOptions = [
   {
@@ -38,10 +40,18 @@ interface SurveyCreatorProps {
 
 const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
   const [title, setTitle] = useState('');
-  const [coverImage, setCoverImage] = useState('https://tr.zotiontech-sa.com/Content/upload/2018298633/201805151150563181374.jpg');
+  const [coverImage, setCoverImage] = useState('');
   const [options, setOptions] = useState<Option[]>(initialOptions);
   const [optionName, setOptionName] = useState('');
   const [optionImage, setOptionImage] = useState('');
+
+  const { register, handleSubmit, formState: { errors } } = useForm<Survey>({
+    defaultValues: {
+      title: '',
+      coverImage: 'https://tr.zotiontech-sa.com/Content/upload/2018298633/201805151150563181374.jpg',
+      options: initialOptions
+    },
+  });
 
   const addOption = () => {
     if (optionName && optionImage) {
@@ -51,7 +61,7 @@ const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
     }
   };
 
-  const handleSubmit = () => {
+  const onSubmit = () => {
     if (title && coverImage && options.length > 1) {
       setSurvey({ title, coverImage, options });
     }
@@ -65,58 +75,76 @@ const SurveyCreator: React.FC<SurveyCreatorProps> = ({ setSurvey }) => {
   return (
     <div className="max-w-lg mx-auto p-4 bg-white shadow-md rounded-lg">
       <h2 className="text-2xl font-bold mb-4 text-center">Anket Oluştur</h2>
-      <input
-        type="text"
-        placeholder="Anket Başlığı"
-        value={title}
-        onChange={(e) => setTitle(e.target.value)}
-        className="w-full p-2 mb-4 border rounded-md"
-      />
-      <input
-        type="text"
-        placeholder="Kapak Görsel URL"
-        value={coverImage}
-        onChange={(e) => setCoverImage(e.target.value)}
-        className="w-full p-2 mb-4 border rounded-md"
-      />
-      <div>
-        <input
-          type="text"
-          placeholder="Seçenek Adı"
-          value={optionName}
-          onChange={(e) => setOptionName(e.target.value)}
-          className="w-1/2 p-2 border rounded-md"
-        />
-        <input
-          type="text"
-          placeholder="Seçenek Görsel URL"
-          value={optionImage}
-          onChange={(e) => setOptionImage(e.target.value)}
-          className="w-1/2 p-2 border rounded-md"
-        />
-        <button className="bg-blue-500 text-white p-2 mt-2 rounded-md hover:bg-blue-600 transition"
-          onClick={addOption}>Seçenek Ekle</button>
-      </div>
-      <div>
-        {options.length > 0 && (
-          <ul className="mb-4 mt-4">
-            {options.map((option, index) => (
-              <li className="flex items-center gap-2 mb-2" key={index}>
-                <button className='w-15 mr-3 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition'
-                onClick={() => handleRemoveOption(index)}>
-                  X
-                </button>
-                <img className="w-12 h-12 rounded-md object-cover" src={option.image} alt={option.name} style={{ width: '50px', height: '50px' }} />
-                <div className='flex justify-between w-100 '>
-                  <span>{option.name}</span>
-                </div>
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
-      <button className="w-full mt-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
-        onClick={handleSubmit}>Anketi Oluştur</button>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <div className='mb-4'>
+          <input
+            {...register('title', { required: 'Anket başlığı zorunludur.' })}
+            type="text"
+            placeholder="Anket Başlığı"
+            value={title}
+            onChange={(e) => setTitle(e.target.value)}
+            className={`border rounded-md w-full p-2 ${errors.title ? 'border-red-500' : ''}`}
+          />
+          {errors.title && <p className="text-red-500">{errors.title.message}</p>}
+        </div>
+
+        <div className='mb-4'>
+          <input
+            {...register('coverImage', { required: 'Kapak görseli URL zorunludur.' })}
+            type="text"
+            placeholder="Kapak Görseli URL"
+            className={`border rounded-md w-full p-2 ${errors.coverImage ? 'border-red-500' : ''}`}
+            onChange={(e) => setCoverImage(e.target.value)}
+            value={coverImage}
+          />
+          {errors.coverImage && <p className="text-red-500">{errors.coverImage.message}</p>}
+        </div>
+
+        <div>
+          <input
+            type="text"
+            placeholder="Seçenek Adı"
+            value={optionName}
+            onChange={(e) => setOptionName(e.target.value)}
+            className="w-1/2 p-2 border rounded-md"
+          />
+          <input
+            type="text"
+            placeholder="Seçenek Görsel URL"
+            value={optionImage}
+            onChange={(e) => setOptionImage(e.target.value)}
+            className="w-1/2 p-2 border rounded-md"
+          />
+          <button type="button" className="bg-blue-500 text-white p-2 mt-2 rounded-md hover:bg-blue-600 transition"
+            onClick={addOption}>Seçenek Ekle</button>
+        </div>
+        
+        <div>
+          {options.length > 0 && (
+            <ul className="mb-4 mt-4">
+              {options.map((option, index) => (
+                <li className="flex items-center gap-2 mb-2" key={index}>
+                  <button type="button" className='w-15 mr-3 bg-red-500 text-white p-2 rounded-md hover:bg-red-600 transition'
+                    onClick={() => handleRemoveOption(index)}>
+                    X
+                  </button>
+                  <img className="w-12 h-12 rounded-md object-cover" src={option.image} alt={option.name} style={{ width: '50px', height: '50px' }} />
+                  <div className='flex justify-between w-100 '>
+                    <span>{option.name}</span>
+                  </div>
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+        <button 
+          className="w-full mt-2 bg-green-500 text-white p-2 rounded-md hover:bg-green-600 transition"
+          // onClick={onSubmit}
+          disabled={options.length === 0 || options.some(option => !option.name)}
+        >
+            Anketi Oluştur
+        </button>
+      </form>
     </div>
   );
 };
